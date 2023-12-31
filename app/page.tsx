@@ -1,13 +1,9 @@
-import dynamic from 'next/dynamic'
-
-const PresenceClient = dynamic(() => import('./presence-client.tsx'), {
-  ssr: false
-})
+import JoinRoom from './JoinRoom'
 
 const Home = () => {
   return (
     <div>
-      <PresenceClient />
+      <JoinRoom />
     </div>
   )
 }
