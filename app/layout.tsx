@@ -1,7 +1,11 @@
-import AblyProvider from './AblyProvider'
+import { Toaster } from 'react-hot-toast'
 import Navbar from './Navbar'
 import './global.css'
 import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+const AblyProvider = dynamic(() => import('./AblyProvider'), {
+  ssr: false
+})
 
 export const metadata: Metadata = {
   title: 'Ably & Next.js fundamentals kit',
@@ -16,8 +20,9 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <div className='p-12'>
+        <div className='sm:p-12 p-4'>
           <AblyProvider>
+            <Toaster />
             <Navbar />
             {children}
           </AblyProvider>

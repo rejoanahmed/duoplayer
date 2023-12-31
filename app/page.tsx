@@ -1,10 +1,6 @@
 import JoinRoom from './JoinRoom'
 
 const Home = () => {
-  return (
-    <div>
-      <JoinRoom />
-    </div>
-  )
+  return <JoinRoom />
 }
 export default Home

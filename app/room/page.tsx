@@ -1,7 +1,15 @@
 'use client'
 
-function page() {
-  return <div>Room page</div>
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+function Page() {
+  const router = useRouter()
+  useEffect(() => {
+    router.push(`/`)
+  }, [router])
+
+  return null
 }
 
-export default page
+export default Page
