@@ -2,6 +2,7 @@
 
 import { useAbly, usePresence } from 'ably/react'
 import { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 
 type Status = {
   myGuess: 'guessing' | number | null
@@ -26,7 +27,7 @@ function Page({
     myGuess: null,
     guessMine: null
   })
-  const disabled = opponentStatus.guessMine === 'setting'
+
   const initRef = useRef(false)
   const { updateStatus, presenceData } = usePresence<Status>(
     params.id,
@@ -54,7 +55,16 @@ function Page({
       }
     }
   )
+
+  const disabled =
+    (myStatus.guessMine !== 'setting' && myStatus.myGuess !== 'guessing') ||
+    presenceData.length < 2
+  console.log(disabled)
   const players = presenceData.map((p) => p.clientId)
+  const opponent = players.find((p) => p !== me)
+  const [result, setResult] = useState<
+    false | { actual: number; input: number }
+  >(false)
 
   useEffect(() => {
     if (!initRef.current && presenceData.length) {
@@ -75,7 +85,39 @@ function Page({
     }
   }, [presenceData])
 
-  console.log(presenceData)
+  useEffect(() => {
+    if (typeof opponentStatus.guessMine === 'number') {
+      updateStatus({
+        myGuess: 'guessing',
+        guessMine: null
+      })
+    }
+    if (typeof opponentStatus.myGuess === 'number') {
+      setResult({
+        actual: myStatus.guessMine as number,
+        input: opponentStatus.myGuess
+      })
+    }
+    if (opponentStatus.guessMine === 'setting') {
+      setResult(false)
+    }
+  }, [opponentStatus])
+
+  useEffect(() => {
+    if (typeof myStatus.myGuess === 'number') {
+      setResult({
+        actual: opponentStatus.guessMine as number,
+        input: myStatus.myGuess
+      })
+      setTimeout(() => {
+        setResult(false)
+        updateStatus({
+          myGuess: null,
+          guessMine: 'setting'
+        })
+      }, 2000)
+    }
+  }, [myStatus])
 
   return (
     <div>
@@ -87,13 +129,12 @@ function Page({
       {players.length > 1 ? (
         <p>
           {myStatus.guessMine === 'setting' &&
-            'Set A number for your Opponent to Guess'}
-          {myStatus.guessMine !== 'setting' &&
-            opponentStatus.guessMine === 'setting' &&
-            'Waiting for your Opponent to set a number'}
-          {myStatus.guessMine !== 'setting' &&
-            opponentStatus.guessMine !== 'setting' &&
-            'Guess the number'}
+            `Set A number for ${opponent} to Guess`}
+          {opponentStatus.guessMine === 'setting' &&
+            `Waiting for  ${opponent} to set a number`}
+          {opponentStatus.myGuess === 'guessing' &&
+            `${opponent} is guessing your number`}
+          {myStatus.myGuess === 'guessing' && `Guess ${opponent}'s number`}
         </p>
       ) : (
         <p>Waiting for another player to join</p>
@@ -109,9 +150,34 @@ function Page({
                   <button
                     disabled={disabled}
                     onClick={() => {
-                      console.log('clicked')
+                      console.log('click')
+                      if (myStatus.guessMine === 'setting') {
+                        updateStatus({
+                          myGuess: null,
+                          guessMine: i * 3 + j + 1
+                        })
+                      }
+                      if (myStatus.myGuess === 'guessing') {
+                        console.log('myguess is this')
+                        updateStatus({
+                          myGuess: i * 3 + j + 1,
+                          guessMine: null
+                        })
+                      }
                     }}
-                    className='rounded-full border bg-slate-500 flex items-center justify-center w-20 h-20'
+                    className={`rounded-full border ${
+                      !result
+                        ? 'bg-slate-500'
+                        : result.actual === i * 3 + j + 1 &&
+                          i * 3 + j + 1 === result.input
+                        ? 'bg-green-500'
+                        : result.actual === i * 3 + j + 1 &&
+                          i * 3 + j + 1 !== result.input
+                        ? 'bg-pink-500'
+                        : result.input === i * 3 + j + 1
+                        ? 'bg-red-600'
+                        : 'bg-slate-500'
+                    } flex items-center justify-center w-20 h-20`}
                     key={j}
                   >
                     {i * 3 + j + 1}
